@@ -1,0 +1,415 @@
+@import './base.css';
+
+/* Define Dark Gradient + Searchlight Theme */
+:root {
+  /* === Dark Gradient + Searchlight Theme === */
+
+  /* --- Base Colors (Dark Mode) --- */
+  --color-background-app: #240011; /* Fallback solid color */
+  --color-surface-card: rgba(30, 20, 40, 0.85); /* Dark semi-transparent charcoal/purple */
+  --color-surface-modal: rgba(30, 20, 40, 0.9); /* Slightly more opaque modal */
+  --color-border: rgba(220, 180, 255, 0.3); /* Subtle light purple border */
+  --color-shadow: rgba(0, 0, 0, 0.6); /* Even Darker Base Shadow color for contrast */
+
+  /* --- Text Colors --- */
+  --color-text-primary: #f5f5f5; /* Very Light Grey/Off-white */
+  --color-text-secondary: #a89ab8; /* Desaturated purple/grey */
+  --color-text-heading: #ffffff; /* White */
+  --color-text-on-primary: #ffffff; /* Text on vibrant buttons */
+
+  /* --- Primary/Accent Colors --- */
+  --color-primary: #bb00ff; /* Bright Purple from gradient */
+  --color-primary-rgb: 187, 0, 255;
+  --color-secondary: #790918; /* Dark Red from gradient */
+  --color-accent-lime: #c6ff00; /* Keep lime for high contrast accent */
+  --color-accent-lime-rgb: 198, 255, 0;
+  /* Remove other accents unless needed */
+  /* --color-accent-cyan: #00e5ff; */
+  /* --color-accent-cyan-rgb: 0, 229, 255; */
+  /* --color-accent-orange: #ff9100; */
+  /* --color-accent-orange-rgb: 255, 145, 0; */
+
+  /* --- Semantic Colors --- */
+  --color-success: #66bb6a; /* Keep standard semantics */
+  --color-warning: #ffa726;
+  --color-error: #ef5350;
+  --color-info: #29b6f6;
+
+  /* --- Link Colors --- */
+  --color-text-link: #e0b0ff; /* Lighter Purple */
+  --color-text-link-hover: #ffffff; /* White on hover */
+
+  /* --- Task Status Colors (Adjust if needed) --- */
+  --color-status-todo: var(--color-info); /* Blue */
+  --color-status-debug: var(--color-warning); /* Orange */
+  --color-status-feature: var(--color-primary); /* Use new primary Purple */
+  --color-status-done: var(--color-success); /* Green */
+
+  /* --- Gradients --- */
+  --gradient-background: linear-gradient(
+    352deg,
+    rgba(36, 0, 17, 1) 0%,
+    rgba(121, 9, 24, 1) 28%,
+    rgba(187, 0, 255, 1) 100%
+  ); /* Static background gradient */
+  --gradient-card-hover: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    /* Slightly brighter hover */ rgba(255, 255, 255, 0) 60%
+  );
+  --gradient-button-primary: linear-gradient(45deg, #bb00ff, #790918); /* Purple to Red gradient */
+
+  /* --- Fonts --- */
+  /* Ensure Poppins and Inter are linked in index.html */
+  --font-primary: 'Inter', sans-serif; /* Main UI font */
+  --font-display: 'Poppins', sans-serif; /* Headings, stats */
+
+  /* --- UI Elements --- */
+  --border-radius-small: 4px;
+  --border-radius-medium: 8px;
+  --border-radius-large: 12px;
+  --box-shadow-card: 0 6px 12px rgba(0, 0, 0, 0.5); /* Darker shadow for contrast */
+  --box-shadow-modal: 0 10px 25px rgba(0, 0, 0, 0.6); /* Darker shadow for contrast */
+  --focus-shadow-color: rgba(var(--color-primary-rgb), 0.4); /* Purple focus glow */
+
+  /* --- Spacing --- */
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+}
+/* Apply base styles */
+body {
+  /* Static Gradient Background */
+  background: var(--gradient-background);
+  /* Ensure it covers the whole viewport */
+  min-height: 100vh;
+  /* Needed for pseudo-element positioning */
+  position: relative;
+  overflow: hidden; /* Hide spotlight overflow */
+
+  color: var(--color-text-primary);
+  font-family: var(--font-primary);
+  font-weight: 400; /* Inter regular */
+  transition: color 0.5s; /* Remove background transition */
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased; /* Improve font rendering */
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  max-width: 100%; /* Allow full width */
+  margin: 0 auto;
+  padding: 0; /* Remove default padding, handle in components/views */
+  font-weight: normal;
+  /* Ensure app content is above the pseudo-element */
+  position: relative;
+  z-index: 1;
+}
+
+a {
+  text-decoration: none;
+  color: var(--color-text-link);
+  transition: color 0.3s ease;
+  padding: 2px 0;
+}
+
+@media (hover: hover) {
+  a:hover {
+    color: var(--color-text-link-hover);
+  }
+}
+
+/* Add link to Google Fonts if using Poppins/Inter */
+/* Make sure to add <link> tag in index.html */
+/* Example: @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap'); */
+
+/* Add global styles for common elements if needed */
+h1,
+h2 {
+  font-family: var(--font-display); /* Use display font (Poppins) */
+  color: var(--color-text-heading);
+  margin-bottom: 1.5rem; /* Increase margin slightly */
+  font-weight: 700; /* Poppins Bold */
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-primary); /* Use primary font (Inter) */
+  color: var(--color-text-primary);
+  margin-bottom: 1rem;
+  font-weight: 600; /* Inter Semi-bold */
+}
+
+/* Add global input focus styles for enhanced feedback */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none; /* Remove default outline */
+  border-color: var(--color-accent-cyan); /* Highlight border with accent */
+  box-shadow: 0 0 0 3px var(--focus-shadow-color); /* Add a prominent shadow using accent */
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease; /* Smooth transition */
+}
+
+/* Adjust h2 margin for ProjectListView */
+.project-list-container + p {
+  /* Selects the first paragraph after .project-list-container */
+  margin-top: 1rem;
+}
+
+.main-content-container {
+  width: 100%;
+  max-width: 960px; /* Adjust max-width as needed */
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* Add global button active state for click feedback */
+button:active {
+  transform: scale(0.95); /* Slightly shrink on click */
+  transition: transform 0.1s ease; /* Quick transition */
+}
+
+/* Add prefers-reduced-motion query */
+/* --- Enhanced Button Styles --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem; /* Increased padding */
+  border: none;
+  border-radius: 50px; /* Pill shape */
+  font-family: var(--font-primary);
+  font-weight: 600; /* Semi-bold */
+  font-size: 1rem;
+  color: var(--color-text-on-primary); /* Use specific color for text on primary buttons */
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-size 0.3s ease;
+  background-size: 100% 100%; /* For gradient animation */
+  text-align: center;
+  white-space: nowrap;
+}
+
+.btn-primary-enhanced {
+  background: var(--gradient-button-primary);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-secondary-enhanced {
+  background-color: var(--color-surface-card); /* Use card surface color */
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+@media (hover: hover) {
+  .btn-primary-enhanced:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 6px 15px rgba(var(--color-accent-pink-rgb), 0.4); /* Use accent for glow */
+    background-size: 150% 150%; /* Subtle gradient shift */
+  }
+  .btn-secondary-enhanced:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-text-secondary);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.btn:active {
+  transform: scale(0.98); /* Override global active state slightly */
+}
+
+.btn-icon {
+  margin-right: 0.5rem;
+}
+
+.btn-loading .btn-text {
+  opacity: 0; /* Hide text when loading */
+}
+
+.btn-loading .spinner {
+  display: inline-block;
+  position: absolute; /* Position spinner in the center */
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 1.2em;
+  height: 1.2em;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s linear infinite;
+}
+
+/* Keyframes for the searchlight effect (Constrained Path) */
+@keyframes searchlightMove {
+  0% {
+    background-position: 25% 25%;
+  } /* Inner Top Left */
+  25% {
+    background-position: 75% 25%;
+  } /* Inner Top Right */
+  50% {
+    background-position: 75% 75%;
+  } /* Inner Bottom Right */
+  75% {
+    background-position: 25% 75%;
+  } /* Inner Bottom Left */
+  100% {
+    background-position: 25% 25%;
+  } /* Back to Inner Top Left */
+}
+
+/* Searchlight pseudo-element */
+body::before {
+  content: '';
+  position: absolute;
+  /* Cover area larger than viewport to allow movement */
+  inset: -50%; /* Keep this to allow movement across the whole area */
+  z-index: 0; /* Behind content */
+  /* The light source */
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.2) 0%,
+    transparent 35%
+  ); /* Increased opacity and size slightly */
+  background-size: 150vmin 150vmin; /* Fixed size relative to viewport */
+  background-repeat: no-repeat; /* Ensure only one spotlight */
+  /* Apply the animation */
+  animation: searchlightMove 25s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* --- Enhanced Input Styles --- */
+.input-enhanced {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-card); /* Darker input background */
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-medium);
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+  box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+.input-enhanced::placeholder {
+  color: var(--color-text-secondary);
+  /* Removed opacity: 0.7; for better contrast */
+}
+
+.input-enhanced:focus {
+  outline: none;
+  border-color: var(--color-accent-cyan); /* Use accent for focus */
+  box-shadow: 0 0 0 3px var(--focus-shadow-color); /* Adjusted focus shadow */
+}
+
+/* --- Visual Color Picker Styles --- */
+.color-picker {
+  display: flex;
+  gap: 0.75rem; /* Space between swatches */
+  margin-top: 0.5rem;
+  flex-wrap: wrap; /* Allow wrapping if needed */
+}
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%; /* Circular swatches */
+  cursor: pointer;
+  border: 3px solid transparent; /* Transparent border initially */
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.color-swatch:hover {
+  transform: scale(1.1);
+}
+
+.color-swatch.selected {
+  border-color: var(--color-text-heading); /* White border for selected */
+  transform: scale(1.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Define swatch colors (add more as needed) */
+/* These classes might not be needed if background is set directly */
+.swatch-purple {
+  background-color: #7e57ff;
+} /* Example old color */
+.swatch-teal {
+  background-color: #3dccc7;
+} /* Example old color */
+.swatch-orange {
+  background-color: var(--color-accent-orange);
+}
+.swatch-yellow {
+  background-color: #ffca28;
+} /* Example old color */
+.swatch-green {
+  background-color: var(--color-success);
+}
+.swatch-red {
+  background-color: var(--color-error);
+}
+.swatch-blue {
+  background-color: var(--color-info);
+}
+.swatch-grey {
+  background-color: var(--color-text-secondary);
+}
+/* Add swatches for new accents */
+.swatch-pink {
+  background-color: var(--color-accent-pink);
+}
+.swatch-cyan {
+  background-color: var(--color-accent-cyan);
+}
+.swatch-lime {
+  background-color: var(--color-accent-lime);
+}
+
+/* --- Enhanced Modal Styles --- */
+/* Assuming BaseModal uses these variables or classes */
+/* Removed .modal-header-line rule */
+
+/* Optional: Style form labels */
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
