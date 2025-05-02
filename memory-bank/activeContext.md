@@ -57,6 +57,7 @@
 - Task Card Refinement: Adjusted internal spacing for vertical layout. Merged status display and dropdown into a single styled select element.
 - Project Detail Modal: Centered project title, metadata, and "Tasks" heading.
 - **Fixed Realtime Project Deletion:** Resolved issue where deleted projects weren't removed from UI immediately by setting `REPLICA IDENTITY FULL` on the `projects` table in Supabase.
+- **Fixed Modal Entrance Flicker:** Resolved occasional flicker by setting initial mask opacity via CSS in `BaseModal.vue`.
 
 ## Next Steps
 

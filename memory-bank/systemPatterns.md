@@ -34,7 +34,7 @@
 - **Navigation Transitions:** Basic CSS fade page transitions implemented in `App.vue` using Vue's `<transition>`.
 - **List Animations:** Refined add/remove animations using `<TransitionGroup>` for projects and tasks, ensuring consistency. **Tasks are now displayed as rectangular cards in a responsive grid.**
 - **Feedback Animations:** Implemented hover effects, button click feedback, input focus feedback. Added GSAP-based pulse animations for adding projects/tasks and status changes. **Implemented animated background blur for modals.**
-- **Modal Animations:** GSAP is used for modal entrance and exit (`BaseModal.vue` via `@enter` and `@leave` hooks) with simple fade-in/out. **Implemented prefers-reduced-motion checks to disable modal animations if preferred.**
+- **Modal Animations:** GSAP is used for modal entrance and exit (`BaseModal.vue` via `@enter` and `@leave` hooks) with simple fade-in/out. **Implemented prefers-reduced-motion checks to disable modal animations if preferred.** **Resolved occasional entrance flicker by setting initial mask opacity via CSS.**
 - **Game-Inspired UI:** Theme variables refined. Modal components (`BaseModal`, `AuthModal`) significantly enhanced for aesthetics. "Add Project" refactored to use a modal instead of inline input. Microinteractions added. **Project Detail Modal layout, including height, gap, and background blur, is complete.** **Add Task Modal styling and size are complete.**
 
 ## Security & Best Practices

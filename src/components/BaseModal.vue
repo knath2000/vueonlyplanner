@@ -94,7 +94,7 @@ async function onEnter(el: Element, done: () => void) {
   const { gsap } = await import('gsap')
 
   // Set initial styles immediately to prevent flicker
-  gsap.set(el, { opacity: 0 }) // Mask starts invisible
+  // gsap.set(el, { opacity: 0 }) // Mask starts invisible - Handled by CSS now
   gsap.set(container, { opacity: 0 }) // Container starts invisible
 
   // Start animation on the next frame
@@ -240,6 +240,7 @@ function triggerCloseAnimation() {
   background: transparent; /* Remove background overlay color */
   backdrop-filter: blur(12px); /* Apply blur */
   z-index: 9999;
+  opacity: 0; /* Set initial opacity via CSS */
   /* Transition removed - mask disappears instantly with v-if */
   /* transition: opacity 0.4s ease; */ /* Adjust timing if needed */
   padding-top: 20px; /* Keep padding-top for top gap */
