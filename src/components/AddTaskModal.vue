@@ -44,9 +44,17 @@
       </form>
     </template>
     <template #footer>
-      <button @click="closeModal" class="button-secondary">Cancel</button>
-      <button type="submit" form="add-task-form" :disabled="loading" class="button-primary">
-        {{ loading ? 'Adding...' : 'Add Task' }}
+      <!-- Checkmark button acts as submit -->
+      <button
+        @click="handleAddTask"
+        :disabled="loading"
+        class="modal-confirm-button"
+        aria-label="Add Task"
+      >
+        <!-- Show spinner when loading -->
+        <span v-if="loading" class="spinner button-spinner"></span>
+        <!-- Show checkmark when not loading -->
+        <ph-check v-else :size="20" weight="bold" />
       </button>
     </template>
   </BaseModal>
@@ -54,6 +62,7 @@
 
 <script setup lang="ts">
 import { watch } from 'vue'
+import { PhCheck } from '@phosphor-icons/vue' // Import Check icon
 import BaseModal from '@/components/BaseModal.vue'
 import { useTaskForm } from '@/composables/useTaskForm' // Import useTaskForm composable
 
@@ -106,6 +115,12 @@ function closeModal() {
 </script>
 
 <style scoped>
+/* Ensure nested modal appears above parent modal */
+.base-modal-mask {
+  /* Target the mask directly as this modal IS the nested one */
+  z-index: 10000; /* Higher than the default 9999 */
+}
+
 /* Styles for the form within the modal */
 #add-task-form {
   display: flex;
@@ -268,4 +283,53 @@ input[type='date']::-webkit-calendar-picker-indicator {
   margin-bottom: var(--space-md); /* Add if not already present or adjust */
 }
 /* --- End Cyberpunk Theme Styles --- */
+
+/* Styles for the modal confirm button */
+.modal-confirm-button {
+  background-color: var(--color-success);
+  color: white;
+  border: none;
+  border-radius: 50%; /* Circular */
+  width: 40px; /* Adjusted size */
+  height: 40px; /* Adjusted size */
+  display: inline-flex; /* Use inline-flex */
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  position: relative; /* Needed for absolute spinner positioning */
+}
+
+.modal-confirm-button:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.modal-confirm-button:active:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.modal-confirm-button:disabled {
+  background-color: var(--color-text-secondary); /* Grey out when disabled */
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Adjust spinner position and color for the button */
+.modal-confirm-button .button-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px; /* Spinner size */
+  height: 20px; /* Spinner size */
+  border-width: 2px; /* Thinner border */
+  border-color: rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  margin: 0; /* Remove margin */
+}
 </style>

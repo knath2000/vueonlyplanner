@@ -183,7 +183,6 @@ nav {
   flex: 1; /* Takes up space on the left */
   min-width: 80px; /* Ensure minimum space, adjust as needed */
 }
-
 .nav-links-center {
   display: flex;
   gap: 1.5rem; /* Keep gap between links */
@@ -197,7 +196,6 @@ nav {
   justify-content: flex-end; /* Align button to the right */
   min-width: 80px; /* Ensure minimum space, adjust as needed */
 }
-
 nav a {
   text-decoration: none;
   color: var(--color-text-secondary); /* Use secondary text color */

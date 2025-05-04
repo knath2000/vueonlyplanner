@@ -35,10 +35,16 @@
             </slot>
           </div>
 
-          <div class="base-modal-footer" v-if="!$slots.footer">
+          <div class="base-modal-footer">
             <slot name="footer">
-              <!-- default footer -->
-              <button class="base-modal-default-button" @click="triggerCloseAnimation">OK</button>
+              <!-- Render default button only if footer slot is not provided -->
+              <button
+                v-if="!$slots.footer"
+                class="base-modal-default-button"
+                @click="triggerCloseAnimation"
+              >
+                OK
+              </button>
             </slot>
           </div>
         </div>
@@ -95,7 +101,7 @@ async function onEnter(el: Element, done: () => void) {
 
   // Set initial styles immediately to prevent flicker
   // gsap.set(el, { opacity: 0 }) // Mask starts invisible - Handled by CSS now
-  gsap.set(container, { opacity: 0 }) // Container starts invisible
+  gsap.set(container, { opacity: 0 }) // Container starts invisible - Restored
 
   // Start animation on the next frame
   requestAnimationFrame(() => {

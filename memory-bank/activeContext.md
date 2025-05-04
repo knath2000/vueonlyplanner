@@ -5,7 +5,8 @@
 - **Completed UI/UX Overhaul (Phases 1-3):** Implemented "Neon Focus" theme, enhanced animations (GSAP Flip, feedback), and refined component styles.
 - **Completed Build Optimization:** Analyzed bundle size, implemented PurgeCSS, and refactored GSAP imports to be dynamic, improving code splitting and potential load performance.
 - **Completed Animation Re-implementation & Accessibility:** Re-introduced smooth page transitions and modal entrance animations, and implemented `prefers-reduced-motion` checks.
-- Next focus: **Phase 4 of UI/UX Overhaul (Polish, Optimization & Accessibility)** - Focusing on remaining accessibility checks and performance testing.
+- **Completed Nested Modal Debugging:** Resolved issues preventing Add/Edit Task modals from appearing when nested within Project Detail modal.
+- Next focus: **Testing & Polish** - Begin comprehensive testing and address any remaining UI/UX refinements.
 
 ## Recent Changes
 
@@ -58,6 +59,10 @@
 - Project Detail Modal: Centered project title, metadata, and "Tasks" heading.
 - **Fixed Realtime Project Deletion:** Resolved issue where deleted projects weren't removed from UI immediately by setting `REPLICA IDENTITY FULL` on the `projects` table in Supabase.
 - **Fixed Modal Entrance Flicker:** Resolved occasional flicker by setting initial mask opacity via CSS in `BaseModal.vue`.
+- **Fixed BaseModal Footer Slot:** Corrected `v-if` logic in `BaseModal.vue` to ensure the `#footer` slot renders correctly when provided by parent components.
+- **Standardized Modal Footers:** Removed the "Cancel" button from `AddProjectModal`, `EditProjectModal`, `AddTaskModal`, and `EditTaskModal`, leaving only the confirmation (checkmark) button.
+- **Task Details Modal (Deferred):** Attempted to implement a nested Task Details modal triggered from `TaskCard`. Encountered persistent rendering issues (modal not appearing despite state being correct). Debugging included checking state, using `<Teleport>`, investigating component internals, and applying `z-index` fixes. The feature was ultimately removed from `TaskCard`, `TaskList`, and `ProjectDetailModal` to be revisited later. The `TaskDetailsModal.vue` component file remains but is unused.
+- **Fixed Nested Add/Edit Task Modals:** Resolved issue where Add Task and Edit Task modals wouldn't appear when triggered from within the Project Detail modal. Initial attempts to fix with `z-index` were unsuccessful. The solution involved moving the `<AddTaskModal>` and `<EditTaskModal>` component tags _outside_ the parent `<BaseModal>` tag in `ProjectDetailModal.vue`, rendering them as siblings instead of children.
 
 ## Next Steps
 
@@ -71,6 +76,7 @@
 4.  **UI/UX Polish:** Continued refinement based on testing feedback. (Medium Priority)
 5.  **CI/CD:** Set up CI/CD pipeline. (Low Priority)
 6.  **Documentation:** Continue updating Memory Bank and `.clinerules`. (Ongoing)
+7.  **Revisit Task Details Modal:** Plan for re-implementing the Task Details modal feature, considering the lessons learned from nesting issues. (Low Priority)
 
 ## Active Decisions and Considerations
 
@@ -89,3 +95,5 @@
 - New theme with animated searchlight background provides a more unique visual identity.
 - Modal blur effect and AuthModal layout issues are resolved.
 - **Successfully re-implemented smooth CSS fade page transitions and GSAP fade-in/out modal animations.**
+- **Nested modals (Add/Edit Task) now function correctly after being moved outside the parent modal's template structure in `ProjectDetailModal.vue`.**
+- **Task Details modal feature has been temporarily removed due to persistent rendering issues and will be revisited.**

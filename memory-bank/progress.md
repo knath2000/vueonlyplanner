@@ -24,10 +24,11 @@
   - Analyzed production bundle using `rollup-plugin-visualizer`.
   - Implemented PurgeCSS via `vite-plugin-purgecss` to remove unused CSS.
   - Refactored GSAP imports to be consistently dynamic across all components, improving code splitting.
+- **Nested Modals (Add/Edit Task):** **Add Task and Edit Task modals now correctly appear when triggered from within the Project Detail modal.** This was achieved by moving their component tags outside the parent `<BaseModal>` in `ProjectDetailModal.vue`.
 
 ## What's Left to Build
 
-- **Edit Functionality:** UI (forms/modals) for editing existing projects and task details. (High Priority)
+- **Edit Functionality:** UI (forms/modals) for editing existing projects. (High Priority)
 - **Phase 4 UI/UX Polish & Accessibility:**
   - Perform Accessibility Review (contrast, focus, ARIA). (High Priority)
   - Performance Testing (Lighthouse on preview build). (Medium Priority)
@@ -40,7 +41,7 @@
   - Implementing unique layout ideas.
   - Ensuring responsiveness and accessibility.
 - **Dashboard:** Add more meaningful statistics (e.g., task counts by status).
-- **Task Details View:** Flesh out the placeholder view (`TaskDetailsView.vue`) if needed.
+- **Task Details Modal (Deferred):** Feature implementation deferred due to rendering issues. `TaskDetailsModal.vue` file exists but is unused.
 - **Deployment:** CI/CD pipeline setup (Vercel/Netlify).
 - **Documentation:** Code comments, component/store documentation (beyond Memory Bank).
 
@@ -49,6 +50,7 @@
 - Core architecture and Supabase integration are functional.
 - Authentication and data management (CRUD, Realtime, RLS) are implemented using Supabase.
 - Adding projects (`AddProjectModal`) and tasks (`AddTaskModal`) via refactored modals using composables is functional.
+- Editing tasks (`EditTaskModal`) via refactored modal using composable is functional.
 - Significant UI/UX refinement phase completed (styling, microinteractions, feedback animations).
 - **Refactoring Complete:** Key components (`ProjectDetailModal`, `ProjectListView`, `DashboardView`) and form logic (`useTaskForm`, `useProjectForm`) refactored for better structure and maintainability.
 - Dashboard statistics partially implemented and refactored (`StatCard`); **counters are reliable across navigation and refresh.**
@@ -61,7 +63,9 @@
 - **Modal blur effect and AuthModal layout issues are resolved.**
 - **Successfully re-implemented smooth CSS fade page transitions and GSAP fade-in/out modal animations.**
 - **Implemented prefers-reduced-motion checks for page transitions and modal animations.**
-- Focus shifts to **Phase 4 UI/UX Polish & Accessibility** (remaining accessibility checks and performance testing).
+- **Add/Edit Modal Footers:** Corrected `BaseModal` footer slot logic. Removed "Cancel" buttons from `AddProjectModal`, `EditProjectModal`, `AddTaskModal`, and `EditTaskModal`, leaving only the confirmation button.
+- **Nested Add/Edit Task Modals are now functional.**
+- Focus shifts to **Testing & Polish**.
 
 ## Known Issues
 
@@ -69,3 +73,4 @@
 - Accessibility needs dedicated testing and optimization (beyond prefers-reduced-motion).
 - Performance testing on the optimized build is pending.
 - The removal of anonymous authentication means users must explicitly sign up or log in.
+- **Task Details Modal feature is deferred.**

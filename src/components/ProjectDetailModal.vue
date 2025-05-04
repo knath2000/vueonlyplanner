@@ -7,11 +7,6 @@
       <div v-if="project" class="project-detail-body">
         <!-- Project title and swatch are now in the header slot -->
 
-        <p class="project-meta">
-          Created: {{ new Date(project.created_at).toLocaleDateString() }} | Updated:
-          {{ new Date(project.updated_at).toLocaleDateString() }}
-        </p>
-
         <TaskList
           :tasks="taskStore.tasks"
           :loading="taskStore.loading"
@@ -19,6 +14,7 @@
           @addTask="openAddTaskModal"
           @editTask="handleEditTask"
         />
+        <!-- Removed stray comment -->
       </div>
       <div v-else class="project-detail-body">
         <p class="empty-state">Project details not available.</p>
@@ -27,13 +23,10 @@
     <template #footer></template>
     <!-- Provide empty footer slot to prevent default -->
   </BaseModal>
+  <!-- Close the main BaseModal HERE -->
 
-  <!-- Use the actual AddTaskModal component -->
-  <!-- Rely on size prop -->
+  <!-- Nested Modals: Render them OUTSIDE the main BaseModal structure -->
   <AddTaskModal :show="showAddTaskModal" @close="closeAddTaskModal" size="small-centered" />
-
-  <!-- Edit Task Modal (nested) -->
-  <!-- Rely on size prop -->
   <EditTaskModal
     :show="showEditTaskModal"
     :task="taskToEdit"
@@ -58,6 +51,7 @@ import type { Task } from '@/types/task' // Removed unused 'TaskStatus' import
 
 // Dynamically import EditTaskModal
 const EditTaskModal = defineAsyncComponent(() => import('@/components/EditTaskModal.vue'))
+// Removed TaskDetailsModal import
 
 const props = defineProps({
   show: {
@@ -92,6 +86,8 @@ const showAddTaskModal = ref(false)
 // State for Edit Task Modal (nested) - Keep separate for now
 const showEditTaskModal = ref(false)
 const taskToEdit = ref<Task | null>(null)
+
+// Removed Task Details Modal state
 
 // Watch the project prop to subscribe/unsubscribe to tasks
 watch(
@@ -151,6 +147,8 @@ function closeEditTaskModal() {
   showEditTaskModal.value = false
   taskToEdit.value = null // Clear the task being edited
 }
+
+// Removed Task Details Modal functions
 </script>
 
 <style scoped>
@@ -165,15 +163,6 @@ function closeEditTaskModal() {
 .project-detail-body {
   overflow-y: auto; /* Keep overflow-y: auto here for the main scrollable content */
   flex-grow: 1; /* Allow body to take up remaining space */
-}
-
-.project-meta {
-  color: var(--color-text-secondary);
-  font-size: 0.9rem;
-  text-align: center; /* Center the text */
-  margin-top: 0; /* Set margin to 0 */
-  margin-bottom: 1.5rem;
-  line-height: 1.2; /* Reduced line height */
 }
 
 /* Styles for nested modals (Add/Edit Task) */

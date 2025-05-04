@@ -1,14 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue' // Import watch
 import { supabase } from '@/supabase' // Import the supabase client
-// Remove Firestore imports
 import { useAuthStore } from './authStore' // Import authStore
 import { useTaskStore } from './taskStore' // Import taskStore
-import type { Project } from '@/types/project' // Assuming you have a types file for Project
-import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js' // Import Realtime types
-
-// Define the Project interface based on the plan (Section 4.1)
-// Moved to types/project.ts
+import type { Project } from '@/types/project'
+import type {
+  RealtimeChannel,
+  RealtimePostgresChangesPayload,
+  REALTIME_SUBSCRIBE_STATES, // Import the status type
+} from '@supabase/supabase-js'
 
 export const useProjectStore = defineStore('projects', () => {
   const projects = ref<Project[]>([])
@@ -18,33 +18,72 @@ export const useProjectStore = defineStore('projects', () => {
 
   // Supabase Realtime channel
   let projectsChannel: RealtimeChannel | null = null // Explicitly type projectsChannel
+  let retryTimeoutId: ReturnType<typeof setTimeout> | null = null // To manage retry timeout
 
   const authStore = useAuthStore() // Get auth store instance
   const taskStore = useTaskStore() // Get task store instance
 
+  // --- Helper to handle reconnection ---
+  function scheduleReconnection() {
+    // Clear existing timeout if any
+    if (retryTimeoutId) {
+      clearTimeout(retryTimeoutId)
+      retryTimeoutId = null
+    }
+    // Schedule a new attempt
+    retryTimeoutId = setTimeout(async () => {
+      console.log('Attempting to resubscribe to projects channel...')
+      await subscribeToProjects() // Use await here
+    }, 5000) // Retry after 5 seconds
+  }
+
   // --- Actions ---
+
+  // Unsubscribe and clean up
+  async function unsubscribeFromProjects() {
+    if (retryTimeoutId) {
+      clearTimeout(retryTimeoutId) // Clear pending retry on explicit unsubscribe
+      retryTimeoutId = null
+    }
+    if (projectsChannel) {
+      try {
+        await supabase.removeChannel(projectsChannel)
+        console.log('Unsubscribed from projects')
+      } catch (removeError) {
+        console.error('Error removing projects channel:', removeError)
+      } finally {
+        projectsChannel = null
+        projects.value = [] // Clear projects
+        loading.value = false
+        projectsLoaded.value = false // Reset loaded status
+        // Don't clear error here, let the next subscribe attempt handle it
+      }
+    } else {
+      // Ensure data is cleared even if channel wasn't assigned
+      projects.value = []
+      loading.value = false
+      projectsLoaded.value = false
+    }
+  }
 
   // Subscribe to real-time project updates
   async function subscribeToProjects() {
-    if (projectsChannel) {
-      console.log('Already subscribed to projects')
-      return // Avoid multiple subscriptions
-    }
-
-    await authStore.authLoadedPromise // Wait for auth state to load
-
+    // 1. Check authentication (Removed explicit unsubscribe - channel() handles replacement)
+    await authStore.authLoadedPromise
     if (!authStore.currentUser) {
       console.log('User not authenticated, cannot subscribe to projects.')
       loading.value = false
+      projectsLoaded.value = false
       return
     }
 
-    loading.value = true // Indicate initial loading
-    error.value = null
+    // 3. Set initial state for new subscription attempt
+    loading.value = true
+    error.value = null // Clear previous errors
 
-    // Supabase Realtime subscription
+    // 4. Create and configure the new channel
     projectsChannel = supabase
-      .channel('public:projects') // Channel name, can be table name
+      .channel('public:projects')
       .on(
         'postgres_changes',
         {
@@ -52,66 +91,76 @@ export const useProjectStore = defineStore('projects', () => {
           schema: 'public',
           table: 'projects',
           filter: `user_id=eq.${authStore.currentUser.id}`,
-        }, // Filter by user_id
+        },
         (payload: RealtimePostgresChangesPayload<Project>) => {
-          // Explicitly type payload
-          console.log('Change received!', payload)
-          // Handle different event types (INSERT, UPDATE, DELETE)
+          console.log('Project change received!', payload)
           if (payload.eventType === 'INSERT') {
-            projects.value.unshift(payload.new as Project) // Add new project
+            // Avoid duplicates if initial fetch hasn't completed
+            if (!projects.value.some((p) => p.id === (payload.new as Project).id)) {
+              projects.value.unshift(payload.new as Project)
+            }
           } else if (payload.eventType === 'UPDATE') {
-            const index = projects.value.findIndex((p: Project) => p.id === payload.old.id) // Explicitly type p
+            const index = projects.value.findIndex((p) => p.id === payload.old.id)
             if (index !== -1) {
-              projects.value[index] = payload.new as Project // Update project
+              projects.value[index] = payload.new as Project
             }
           } else if (payload.eventType === 'DELETE') {
-            projects.value = projects.value.filter((p: Project) => p.id !== payload.old.id) // Explicitly type p
+            projects.value = projects.value.filter((p) => p.id !== payload.old.id)
           }
         },
       )
-      .subscribe(async (status) => {
+      .subscribe(async (status: REALTIME_SUBSCRIBE_STATES) => {
+        // 5. Handle subscription status changes
         if (status === 'SUBSCRIBED') {
-          console.log('Subscribed to projects channel')
-          // Initial data fetch after subscription
-          const { data, error: fetchError } = await supabase
-            .from('projects')
-            .select('*')
-            .eq('user_id', authStore.currentUser!.id) // Filter initial fetch by user_id, added non-null assertion
-            .order('created_at', { ascending: false }) // Order by created_at
+          console.log('Successfully subscribed to projects channel')
+          error.value = null // Clear any previous error messages
+          // Initial data fetch only needed if projects array is empty
+          if (projects.value.length === 0) {
+            console.log('Projects array is empty, fetching initial data...')
+            const { data, error: fetchError } = await supabase
+              .from('projects')
+              .select('*')
+              .eq('user_id', authStore.currentUser!.id)
+              .order('created_at', { ascending: false })
 
-          if (fetchError) {
-            console.error('Error fetching initial projects:', fetchError)
-            error.value = 'Failed to fetch projects.'
+            if (fetchError) {
+              console.error('Error fetching initial projects:', fetchError)
+              error.value = 'Failed to fetch projects.'
+              loading.value = false
+              projects.value = [] // Clear potentially partial data
+              projectsLoaded.value = false
+            } else {
+              projects.value = data as Project[]
+              loading.value = false
+              projectsLoaded.value = true
+              console.log('Initial projects fetched.')
+              // Fetch dashboard tasks only after initial projects load
+              taskStore.fetchAllUserTasks()
+            }
           } else {
-            projects.value = data as Project[]
-            loading.value = false // Loading finished after initial fetch
-            projectsLoaded.value = true // Set projectsLoaded to true
-            // Fetch all tasks for dashboard count *after* projects are loaded
-            taskStore.fetchAllUserTasks()
+            // Projects already exist, assume realtime updates will handle changes.
+            console.log('Projects already loaded, skipping initial fetch.')
+            loading.value = false // Ensure loading is false
+            // Ensure projectsLoaded is true if we skipped fetch but have projects
+            if (!projectsLoaded.value) projectsLoaded.value = true
           }
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('Error subscribing to projects channel')
-          error.value = 'Failed to subscribe to project updates.'
-          loading.value = false
+          console.error('Error subscribing to projects channel (CHANNEL_ERROR status)')
+          error.value = 'Project connection failed. Retrying...' // Keep error message
+          loading.value = false // Stop loading indicator
+          // DO NOT clear projects.value or projectsLoaded here
+          scheduleReconnection() // Attempt to reconnect
         } else if (status === 'CLOSED' || status === 'TIMED_OUT') {
           console.log(`Project channel ${status}. Attempting to re-subscribe...`)
-          // Clean up the old channel and attempt to re-subscribe after a delay
-          unsubscribeFromProjects() // Clean up
-          setTimeout(() => {
-            subscribeToProjects() // Attempt re-subscription
-          }, 5000) // Retry after 5 seconds
+          // Only set error if not already trying to reconnect
+          if (!retryTimeoutId) {
+            error.value = 'Project connection closed/timed out. Retrying...' // Keep error message
+          }
+          loading.value = false // Stop loading indicator
+          // DO NOT clear projects.value or projectsLoaded here
+          scheduleReconnection() // Attempt to reconnect
         }
       })
-  }
-
-  // Unsubscribe when needed (e.g., on user logout or component unmount if store is instance-based)
-  function unsubscribeFromProjects() {
-    if (projectsChannel) {
-      supabase.removeChannel(projectsChannel)
-      projectsChannel = null
-      projects.value = [] // Clear projects on unsubscribe
-      console.log('Unsubscribed from projects')
-    }
   }
 
   // Watch for authentication changes
@@ -119,16 +168,12 @@ export const useProjectStore = defineStore('projects', () => {
     () => authStore.currentUser,
     (newUser, oldUser) => {
       if (newUser && !oldUser) {
-        // User logged in
         console.log('Auth state changed: User logged in, subscribing to projects.')
         subscribeToProjects()
       } else if (!newUser && oldUser) {
-        // User logged out
         console.log('Auth state changed: User logged out, unsubscribing from projects.')
         unsubscribeFromProjects()
       }
-      // Handle initial load case where user might already be logged in
-      // This is covered by the initial check within subscribeToProjects using authLoadedPromise
     },
     { immediate: false }, // Don't run immediately, let subscribeToProjects handle initial load check
   )
@@ -137,7 +182,6 @@ export const useProjectStore = defineStore('projects', () => {
   async function addProject(
     newProjectData: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'user_id'>,
   ) {
-    // Updated Omit type
     loading.value = true
     error.value = null
 
@@ -177,23 +221,19 @@ export const useProjectStore = defineStore('projects', () => {
     id: string,
     updatedData: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at' | 'user_id'>>, // Updated Omit type
   ) {
-    loading.value = true
+    // No loading state change here, let realtime handle UI update
     error.value = null
 
     if (!authStore.currentUser) {
       console.error('User not authenticated, cannot update project.')
       error.value = 'User not authenticated.'
-      loading.value = false
       return
     }
 
     try {
       const { error: updateError } = await supabase
         .from('projects')
-        .update({
-          ...updatedData,
-          // updated_at will be set by database default
-        })
+        .update({ ...updatedData })
         .eq('id', id)
         .eq('user_id', authStore.currentUser.id) // Ensure user owns the project
 
@@ -204,20 +244,17 @@ export const useProjectStore = defineStore('projects', () => {
       // Catch as unknown
       console.error('Error updating project:', err)
       error.value = err instanceof Error ? err.message : 'An unknown error occurred.' // Safely access message
-    } finally {
-      loading.value = false
     }
   }
 
   // Delete Project
   async function deleteProject(id: string) {
-    loading.value = true
+    // No loading state change here, let realtime handle UI update
     error.value = null
 
     if (!authStore.currentUser) {
       console.error('User not authenticated, cannot delete project.')
       error.value = 'User not authenticated.'
-      loading.value = false
       return
     }
 
@@ -230,13 +267,15 @@ export const useProjectStore = defineStore('projects', () => {
 
       if (deleteError) throw deleteError
 
-      // Realtime subscription will remove the project from the state
+      // Manually remove the project from the local state for immediate UI update
+      projects.value = projects.value.filter((p) => p.id !== id)
+      console.log(`Project ${id} removed locally after successful delete.`)
+
+      // Realtime subscription will also remove the project (ensuring consistency)
     } catch (err: unknown) {
       // Catch as unknown
       console.error('Error deleting project:', err)
       error.value = err instanceof Error ? err.message : 'An unknown error occurred.' // Safely access message
-    } finally {
-      loading.value = false
     }
   }
 

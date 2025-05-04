@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, toRef, defineEmits, onMounted, onUnmounted } from 'vue' // Import ref, onMounted, onUnmounted
 import { useTaskStore } from '@/stores/taskStore'
-import type { Task, TaskStatus, TaskPriority } from '@/types/task' // Import TaskPriority
+import type { Task, TaskStatus } from '@/types/task' // Removed unused TaskPriority
 import { PhPencilSimple, PhX, PhCheckCircle } from '@phosphor-icons/vue' // Import Phosphor icons + CheckCircle
 // Removed static import: import { gsap } from 'gsap'
 
@@ -75,7 +75,7 @@ const props = defineProps<{
 }>()
 
 // Define emits
-const emit = defineEmits(['editTask'])
+const emit = defineEmits(['editTask']) // Remove 'viewTask'
 
 const taskStore = useTaskStore()
 const { updateTask, deleteTask } = taskStore
@@ -87,6 +87,8 @@ let hoverTimeline: gsap.core.Timeline | null = null
 function emitEditTask() {
   emit('editTask', props.task.id)
 }
+
+// Removed handleCardClick function
 
 const newStatus = ref<TaskStatus>(props.task.status)
 
