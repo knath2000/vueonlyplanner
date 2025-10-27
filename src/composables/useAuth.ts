@@ -1,21 +1,23 @@
 import { ref } from 'vue'
-import { StackClient } from '@stackframe/stack' // Import Stack SDK for Neon Auth
+import { supabase } from '@/supabase' // Import the supabase client
+import type { User } from '@supabase/supabase-js' // Import Supabase User type
 
 const useAuth = () => {
-  const user = ref<any | null>(null) // Neon Auth user type
+  const user = ref<User | null>(null) // Reactive user state
   const error = ref<string | null>(null)
   const loading = ref<boolean>(false)
 
-  // Initialize Stack client for Neon Auth
-  const stackClient = new StackClient(import.meta.env.VITE_STACK_PROJECT_ID)
+  // Supabase handles auth state changes internally and via onAuthStateChange in the store
 
   const signUpWithEmail = async (email: string, password: string) => {
     loading.value = true
     error.value = null
     try {
-      const result = await stackClient.auth.signUpWithCredential(email, password)
-      user.value = result.user
+      const { data, error: authError } = await supabase.auth.signUp({ email, password })
+      if (authError) throw authError
+      user.value = data.user // Update local user ref (optional, store is primary)
     } catch (err: any) {
+      // Catch as any for Supabase errors
       console.error('Signup error:', err)
       error.value = err.message
     } finally {
@@ -27,9 +29,11 @@ const useAuth = () => {
     loading.value = true
     error.value = null
     try {
-      const result = await stackClient.auth.signInWithCredential(email, password)
-      user.value = result.user
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+      if (authError) throw authError
+      user.value = data.user // Update local user ref (optional, store is primary)
     } catch (err: any) {
+      // Catch as any for Supabase errors
       console.error('Signin error:', err)
       error.value = err.message
     } finally {
@@ -41,9 +45,11 @@ const useAuth = () => {
     loading.value = true
     error.value = null
     try {
-      await stackClient.auth.signInWithOAuth('google')
-      // OAuth redirects, user state will be updated on callback
+      const { data, error: authError } = await supabase.auth.signInWithOAuth({ provider: 'google' })
+      if (authError) throw authError
+      // Supabase redirects for OAuth, user state will be updated on callback
     } catch (err: any) {
+      // Catch as any for Supabase errors
       console.error('Google Signin error:', err)
       error.value = err.message
     } finally {
@@ -51,13 +57,17 @@ const useAuth = () => {
     }
   }
 
+  // Remove signInAnonymously as Supabase doesn't have a direct equivalent
+
   const signOutUser = async () => {
     loading.value = true
     error.value = null
     try {
-      await stackClient.auth.signOut()
-      user.value = null
+      const { error: authError } = await supabase.auth.signOut()
+      if (authError) throw authError
+      user.value = null // Clear local user ref
     } catch (err: any) {
+      // Catch as any for Supabase errors
       console.error('Signout error:', err)
       error.value = err.message
     } finally {
@@ -66,12 +76,13 @@ const useAuth = () => {
   }
 
   return {
-    user,
+    user, // Note: The authStore's currentUser is the primary source of truth
     error,
     loading,
     signUpWithEmail,
     signInWithEmail,
     signInWithGoogle,
+    // signInAnonymously is removed
     signOutUser,
   }
 }

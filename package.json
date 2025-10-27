@@ -14,13 +14,10 @@
   },
   "dependencies": {
     "@phosphor-icons/vue": "^2.2.1",
-    "@stackframe/stack": "^2.8.47",
-    "@supabase/supabase-js": "^2.76.1",
+    "@supabase/supabase-js": "^2.49.4",
     "@vueuse/motion": "^3.0.3",
     "gsap": "^3.12.7",
     "pinia": "^3.0.2",
-    "postgrest-js": "^2.0.0-rc1",
-    "socket.io-client": "^4.8.1",
     "vue": "^3.5.13",
     "vue-router": "^4.5.1",
     "vuedraggable": "^2.24.3"

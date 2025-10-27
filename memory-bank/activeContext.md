@@ -2,79 +2,98 @@
 
 ## Current Work Focus
 
-- **Completed Major Migration: Supabase → Neon Auth (Beta) + Neon Database**: Successfully migrated the entire authentication and database layer from Supabase to Neon's serverless PostgreSQL with Neon Auth (Beta). This includes complete code changes, dependency updates, and infrastructure setup.
-- **Completed Neon Auth Integration**: Implemented Stack Auth SDK for authentication with email/password and Google OAuth support.
-- **Completed Database Migration**: Replaced Supabase client with Neon PostgREST client, configured with production Neon database connection.
-- **Implemented Real-time Alternative**: Created polling-based system to replace Supabase Realtime WebSocket subscriptions.
-- **Next focus: Store Updates & Schema Migration** - Update Pinia stores to use Neon database and migrate existing data.
+- **Completed UI/UX Overhaul (Phases 1-3):** Implemented "Neon Focus" theme, enhanced animations (GSAP Flip, feedback), and refined component styles.
+- **Completed Build Optimization:** Analyzed bundle size, implemented PurgeCSS, and refactored GSAP imports to be dynamic, improving code splitting and potential load performance.
+- **Completed Animation Re-implementation & Accessibility:** Re-introduced smooth page transitions and modal entrance animations, and implemented `prefers-reduced-motion` checks.
+- **Completed Nested Modal Debugging:** Resolved issues preventing Add/Edit Task modals from appearing when nested within Project Detail modal.
+- Next focus: **Testing & Polish** - Begin comprehensive testing and address any remaining UI/UX refinements.
 
 ## Recent Changes
 
-- **Neon Auth (Beta) Migration**:
-  - Installed and configured `@stackframe/stack` SDK for Neon Auth
-  - Updated `useAuth.ts` composable to use Stack Auth methods
-  - Migrated `authStore.ts` to initialize Neon Auth state on app load
-  - Replaced Supabase auth event listeners with Neon Auth initialization
-  - Maintained same API for components (login, logout, register, Google auth)
-
-- **Database Migration to Neon**:
-  - Completely removed Supabase client from `src/supabase/index.ts`
-  - Implemented Neon PostgREST client for all database operations
-  - Updated environment variables for Neon connection
-  - Configured Neon database credentials for production deployment
-
-- **Real-time Features Replacement**:
-  - Created `src/composables/useRealtime.ts` with polling-based updates
-  - Implemented 5-second polling for projects and 3-second polling for tasks
-  - Added Socket.io client infrastructure for future WebSocket implementation
-  - Updated polling functions to use Neon database client
-
-- **User Migration Infrastructure**:
-  - Created `migrate_users.ts` script for importing users from Supabase
-  - Handles bcrypt password hash preservation during migration
-  - Includes error handling and progress logging
-
-- **Environment Configuration**:
-  - Updated `.env.example` with Neon Auth and database credentials
-  - Added Neon API URL and database password configuration
-  - Prepared for Vercel deployment with Neon connection
-
-- **Dependency Management**:
-  - Removed `@supabase/supabase-js` dependency
-  - Added `postgrest-js` for Neon database operations
-  - Added `socket.io-client` for future real-time capabilities
+- Implemented core architecture (Vue, Pinia, Router, Supabase).
+- Developed Pinia stores (`projectStore`, `taskStore`, `authStore`) with real-time Supabase Realtime sync and RLS.
+- Created views (Dashboard, ProjectList, ProjectDetail) and components (`ProjectCard`, `TaskCard`, `BaseModal`, `AuthModal`).
+- Implemented UI for Create/Read/Delete (Projects, Tasks) and Update (Task Status) using Supabase.
+- **Fixed Authentication Flow:** `AuthModal.vue` now uses `authStore.login` and `authStore.register` actions for authentication.
+- **Fixed Modal Closing Flicker:** Removed CSS transition on modal mask, relying on `v-if` removal after GSAP exit animation.
+- **Fixed Data Persistence on Refresh:** `authStore` triggers `projectStore.subscribeToProjects` on initial session load, which in turn triggers `taskStore.fetchAllUserTasks` after projects are loaded.
+- **Fixed Supabase Realtime Subscription Timeout:** Added logic in `projectStore` to attempt re-subscription on `CLOSED` or `TIMED_OUT` events.
+- **UI/UX Refinement:**
+  - **Implemented basic CSS fade page transitions in `App.vue`.**
+  - Refined list animations using `<TransitionGroup>`.
+  - Added microinteractions (hover effects, button click feedback, input focus feedback).
+  - Implemented visual feedback animations (GSAP) for adding projects/tasks and status changes.
+  - Significantly enhanced `BaseModal` aesthetics (styling, layout, animation).
+  - Applied refined theme (colors, gradients) more broadly across UI elements.
+  - Fixed build errors related to template comments/syntax.
+  - **Resolved Project Detail Modal height and bottom gap issues, ensuring it extends correctly to the bottom of the viewport with a slight gap above the menu button.**
+  - **Implemented animated background blur for modals using `backdrop-filter` and Vue transitions.**
+  - **Styled the "Add New Task" button to match the primary button theme.**
+  - **Removed the "Close" button from the Project Detail Modal footer.**
+  - **Re-introduced simple fade-in animation for modal entrance in `BaseModal.vue` using GSAP in the `@enter` hook, ensuring proper timing with `gsap.set` and `requestAnimationFrame`.**
+  - **Implemented `prefers-reduced-motion` checks for page transitions and modal animations.**
+- **Dashboard Updates:**
+  - Removed placeholder "Tasks Done" section.
+  - Implemented dynamic count for "Tasks To Do" (excluding 'Done' tasks).
+- **Refactoring (Completed):**
+  - Decomposed `ProjectDetailModal` into `ProjectDetailHeader` and `TaskList`.
+  - Extracted `StatCard` component from `DashboardView`.
+  - Created `useTaskForm` composable and refactored `AddTaskModal`/`EditTaskModal` to use it.
+  - Created `useProjectForm` composable and `AddProjectModal` component, refactoring `ProjectListView` to use them.
+- Completed Supabase Migration (Authentication, Database, Realtime).
+- Implemented "Add Task" functionality (now using `AddTaskModal` with `useTaskForm`).
+- Implemented Project Detail Modal (`ProjectDetailModal.vue`) to display project information and tasks.
+- Resolved the spacing issue between the project title and meta information in the Project Detail Modal.
+- Created nested Add Task Modal (`AddTaskModal.vue`) and Edit Task Modal (`EditTaskModal.vue`) components for use within the Project Detail Modal.
+- Styled the Add New Task modal (size, form elements, header, buttons) to match project visual identity.
+- Ensured the menu button floats correctly above the modal with appropriate z-index.
+- Implemented task display as rectangular cards in a responsive grid within the Project Detail Modal.
+- Optimized production build performance: Addressed Lighthouse issues by dynamically importing GSAP and verifying build/preview process. Achieved high Lighthouse scores on production preview.
+- Build Optimization:
+  - Analyzed production bundle using `rollup-plugin-visualizer`.
+  - Installed and configured `vite-plugin-purgecss` to remove unused CSS.
+  - Refactored GSAP imports in `TaskList.vue` and `ProjectListView.vue` to be consistently dynamic, resolving build warnings and improving code splitting.
+- Theme Update: Changed background to static dark pink/purple gradient with CSS animated "searchlight" effect. Updated theme variables for contrast.
+- Modal Fixes: Corrected persistent background blur effect. Adjusted AuthModal spacing and BaseModal styles to prevent content overflow. Added prop to BaseModal to conditionally hide close button.
+- Task Card Refinement: Adjusted internal spacing for vertical layout. Merged status display and dropdown into a single styled select element.
+- Project Detail Modal: Centered project title, metadata, and "Tasks" heading.
+- **Fixed Realtime Project Deletion:** Resolved issue where deleted projects weren't removed from UI immediately by setting `REPLICA IDENTITY FULL` on the `projects` table in Supabase.
+- **Fixed Modal Entrance Flicker:** Resolved occasional flicker by setting initial mask opacity via CSS in `BaseModal.vue`.
+- **Fixed BaseModal Footer Slot:** Corrected `v-if` logic in `BaseModal.vue` to ensure the `#footer` slot renders correctly when provided by parent components.
+- **Standardized Modal Footers:** Removed the "Cancel" button from `AddProjectModal`, `EditProjectModal`, `AddTaskModal`, and `EditTaskModal`, leaving only the confirmation (checkmark) button.
+- **Task Details Modal (Deferred):** Attempted to implement a nested Task Details modal triggered from `TaskCard`. Encountered persistent rendering issues (modal not appearing despite state being correct). Debugging included checking state, using `<Teleport>`, investigating component internals, and applying `z-index` fixes. The feature was ultimately removed from `TaskCard`, `TaskList`, and `ProjectDetailModal` to be revisited later. The `TaskDetailsModal.vue` component file remains but is unused.
+- **Fixed Nested Add/Edit Task Modals:** Resolved issue where Add Task and Edit Task modals wouldn't appear when triggered from within the Project Detail modal. Initial attempts to fix with `z-index` were unsuccessful. The solution involved moving the `<AddTaskModal>` and `<EditTaskModal>` component tags _outside_ the parent `<BaseModal>` tag in `ProjectDetailModal.vue`, rendering them as siblings instead of children.
 
 ## Next Steps
 
-1. **Update Pinia Stores**: Modify `projectStore.ts` and `taskStore.ts` to use Neon PostgREST client instead of Supabase
-2. **Database Schema Setup**: Create projects and tasks tables in Neon database with proper RLS policies
-3. **Data Migration**: Run user migration script and transfer existing project/task data
-4. **Testing & Validation**: Test authentication flow and CRUD operations with Neon
-5. **Performance Optimization**: Monitor polling performance and optimize intervals if needed
-6. **Documentation Update**: Update memory-bank with migration learnings and new architecture
+1.  **Testing:** Begin comprehensive functional testing (unit, integration, E2E, cross-browser - Safari focus). (High Priority)
+2.  **Phase 4 UI/UX Polish & Accessibility:**
+    - Perform Accessibility Review (contrast, focus, ARIA). (High Priority)
+    - Performance Testing (Lighthouse on preview build). (Medium Priority)
+3.  **Advanced Animations & UX:**
+    - Drag-and-drop interface for task status changes. (Medium Priority)
+    - Further integration of GSAP / @vueuse/motion for more sophisticated animations (e.g., physics-based effects). (Low Priority)
+4.  **UI/UX Polish:** Continued refinement based on testing feedback. (Medium Priority)
+5.  **CI/CD:** Set up CI/CD pipeline. (Low Priority)
+6.  **Documentation:** Continue updating Memory Bank and `.clinerules`. (Ongoing)
+7.  **Revisit Task Details Modal:** Plan for re-implementing the Task Details modal feature, considering the lessons learned from nesting issues. (Low Priority)
 
 ## Active Decisions and Considerations
 
-- **Real-time Trade-off**: Accepted polling-based updates (3-5 second delays) instead of instant WebSocket updates to maintain Neon architecture
-- **Beta Status Acceptance**: Chose Neon Auth (Beta) despite beta status for serverless benefits and database-first approach
-- **Migration Strategy**: Preserved existing user passwords using bcrypt hash compatibility during migration
-- **Architecture Simplification**: Removed complex Supabase Realtime subscriptions in favor of simpler polling mechanism
-- **Future-Proofing**: Added Socket.io infrastructure for potential future real-time server implementation
-
-## Key Learnings from Migration
-
-- **Neon Auth Benefits**: Database-first authentication with automatic user synchronization, no webhook configuration needed
-- **PostgREST Differences**: Slightly different query syntax compared to Supabase, requires direct SQL-like operations
-- **Polling vs Realtime**: Acceptable performance for task management app, but noticeable delay compared to WebSocket updates
-- **Stack Auth SDK**: Clean API for authentication, supports multiple OAuth providers (Google, GitHub, Microsoft)
-- **Migration Complexity**: User ID changes require careful foreign key remapping during data migration
-
-## Technical Architecture Changes
-
-- **Authentication**: Neon Auth (Beta) via Stack Auth SDK
-- **Database**: Neon PostgreSQL with PostgREST API
-- **Real-time**: Polling-based updates (projects: 5s, tasks: 3s)
-- **Deployment**: Configured for Vercel with Neon connection
-- **Dependencies**: Removed Supabase, added Neon-specific packages
-
-The migration represents a significant architectural shift toward a more serverless, database-centric approach while maintaining all core functionality of the task management application.
+- Core functionality and Supabase integration are established; focus shifts to UI/UX differentiation and remaining features.
+- Prioritize implementing advanced animations and visual polish as per the project brief.
+- Continue referencing best practices for performance (especially animation on Safari) and accessibility. **Implemented prefers-reduced-motion checks.**
+- Address `.clinerules` regarding tool usage patterns (`write_to_file` preference over `apply_diff` for complex changes).
+- Ensure Supabase RLS is robust to protect user data based on `user_id`.
+- The removal of anonymous authentication requires users to explicitly sign up or log in.
+- Successfully resolved the complex modal height and layout issues, ensuring a consistent visual experience.
+- The animated background blur adds a significant visual polish to the modal experience.
+- The task card grid provides a more visually appealing and organized display of tasks.
+- Data stores now reactively manage subscriptions and data loading based on subsequent authentication state changes, improving user experience after login.
+- Dashboard counters (`Total Projects`, `Tasks To Do`) are now reliably fetched and displayed, persisting correctly across navigation and page refreshes.
+- Build optimizations (PurgeCSS, dynamic GSAP imports) are implemented to improve production bundle size and composition.
+- New theme with animated searchlight background provides a more unique visual identity.
+- Modal blur effect and AuthModal layout issues are resolved.
+- **Successfully re-implemented smooth CSS fade page transitions and GSAP fade-in/out modal animations.**
+- **Nested modals (Add/Edit Task) now function correctly after being moved outside the parent modal's template structure in `ProjectDetailModal.vue`.**
+- **Task Details modal feature has been temporarily removed due to persistent rendering issues and will be revisited.**

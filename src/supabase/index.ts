@@ -1,17 +1,11 @@
-// src/supabase/index.ts - Now using Neon Database + PostgREST only
-import { PostgrestClient } from 'postgrest-js'
+// src/supabase/index.ts
+import { createClient } from '@supabase/supabase-js'
 
-// Neon PostgREST client for all database operations
-const neonApiUrl = import.meta.env.VITE_NEON_API_URL
-const neonPassword = import.meta.env.VITE_NEON_DB_PASSWORD
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!neonApiUrl || !neonPassword) {
-  throw new Error('Neon API URL and password must be provided in environment variables.')
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Supabase URL and Anon Key must be provided in environment variables.')
 }
 
-export const db = new PostgrestClient(`${neonApiUrl}/rest/v1`, {
-  headers: {
-    'apikey': neonPassword,
-    'Authorization': `Bearer ${neonPassword}`,
-  },
-})
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)

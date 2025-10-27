@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { StackClientApp } from '@stackframe/stack' // Import Stack SDK for Neon Auth
+import { supabase } from '@/supabase' // Import the supabase client
+import type { User } from '@supabase/supabase-js' // Import Supabase User type
 import useAuth from '@/composables/useAuth' // Import the auth composable
 import { useProjectStore } from './projectStore' // Import projectStore
 
@@ -10,46 +11,42 @@ const authLoadedPromise = new Promise((resolve) => {
 })
 
 export const useAuthStore = defineStore('auth', () => {
-  const currentUser = ref<any | null>(null) // Neon Auth user type
+  const currentUser = ref<User | null>(null)
   const loading = ref<boolean>(true) // Initially loading while checking auth state
   const error = ref<string | null>(null)
-
-  // Initialize Stack client for Neon Auth
-  const stackClient = new StackClientApp(import.meta.env.VITE_STACK_PROJECT_ID)
 
   const {
     signUpWithEmail,
     signInWithEmail,
     signInWithGoogle,
+    // signInAnonymously is removed
     signOutUser,
     error: authError,
   } = useAuth() // Use the auth composable
 
-  // Initialize auth state on store creation
-  const initializeAuth = async () => {
-    try {
-      const user = await stackClient.auth.getUser()
-      currentUser.value = user
-      loading.value = false
-      resolveAuthLoaded()
+  // Listen for auth state changes using Supabase
+  supabase.auth.onAuthStateChange((event, session) => {
+    currentUser.value = session?.user ?? null
+    loading.value = false // Set loading to false after initial check
+    resolveAuthLoaded() // Resolve the promise
 
-      // If user exists, trigger initial data fetch
-      if (user) {
-        console.log('Auth state initialized: User found, triggering initial data fetch.')
-        const projectStore = useProjectStore()
-        projectStore.subscribeToProjects()
-      } else {
-        console.log('Auth state initialized: No user found.')
-      }
-    } catch (err) {
-      console.error('Error initializing auth:', err)
-      loading.value = false
-      resolveAuthLoaded()
+    // If a session exists (user is logged in or session restored), trigger initial data fetch
+    if (session) {
+      console.log('Auth state changed: Session found, triggering initial data fetch.')
+      const projectStore = useProjectStore()
+      // Call subscribeToProjects which handles the initial fetch
+      projectStore.subscribeToProjects()
+    } else {
+      console.log('Auth state changed: No session found.')
+      // Optional: Clear data in other stores on explicit logout if not handled by their watchers
+      // const projectStore = useProjectStore();
+      // projectStore.clearProjects(); // Assuming a clearProjects action exists
+      // const taskStore = useTaskStore(); // Assuming useTaskStore is imported
+      // taskStore.clearTasks(); // Assuming a clearTasks action exists
     }
-  }
 
-  // Call initialize on store creation
-  initializeAuth()
+    // No automatic anonymous sign-in with Supabase
+  })
 
   // Actions for login, logout, etc.
   const login = async (email: string, password: string) => {
@@ -61,7 +58,6 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = async () => {
     error.value = null // Clear previous errors
     await signOutUser()
-    currentUser.value = null // Clear user immediately
     error.value = authError.value // Propagate error from composable
   }
 
@@ -86,6 +82,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     register,
     signInWithGoogleAction, // Export Google Sign-In action
+    // signInAnonymously is removed
     authLoadedPromise, // Export the promise
   }
 })
