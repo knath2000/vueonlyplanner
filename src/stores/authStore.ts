@@ -14,12 +14,31 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = ref<boolean>(true) // Initially loading while checking auth state
   const error = ref<string | null>(null)
 
-  // Initialize Stack client for Neon Auth
-  const stackClient = new StackClientApp({
-    projectId: import.meta.env.VITE_STACK_PROJECT_ID,
-    publishableClientKey: import.meta.env.VITE_STACK_PUBLISHABLE_CLIENT_KEY,
-    tokenStore: "cookie"
-  })
+  // Initialize Stack client for Neon Auth with error handling
+  let stackClient: StackClientApp | null = null
+
+  try {
+    const projectId = import.meta.env.VITE_STACK_PROJECT_ID
+    const publishableKey = import.meta.env.VITE_STACK_PUBLISHABLE_CLIENT_KEY
+
+    if (!projectId || !publishableKey) {
+      console.error('Neon Auth: Missing required environment variables')
+      console.error('VITE_STACK_PROJECT_ID:', projectId ? '✓ Set' : '✗ Missing')
+      console.error('VITE_STACK_PUBLISHABLE_CLIENT_KEY:', publishableKey ? '✓ Set' : '✗ Missing')
+      throw new Error('Neon Auth environment variables not configured')
+    }
+
+    stackClient = new StackClientApp({
+      projectId,
+      publishableClientKey,
+      tokenStore: "cookie"
+    })
+  } catch (err) {
+    console.error('Failed to initialize Neon Auth client:', err)
+    error.value = 'Authentication service not configured'
+    loading.value = false
+    resolveAuthLoaded()
+  }
 
   const {
     signUpWithEmail,
@@ -31,6 +50,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Initialize auth state on store creation
   const initializeAuth = async () => {
+    if (!stackClient) {
+      console.error('Cannot initialize auth: Stack client not available')
+      return
+    }
+
     try {
       const user = await stackClient.getUser({ or: "return-null" })
       currentUser.value = user
@@ -52,11 +76,18 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Call initialize on store creation
-  initializeAuth()
+  // Call initialize only if stackClient is available
+  if (stackClient) {
+    initializeAuth()
+  }
 
   // Actions for login, logout, etc.
   const login = async (email: string, password: string) => {
+    if (!stackClient) {
+      error.value = 'Authentication service not available'
+      return
+    }
+
     error.value = null // Clear previous errors
     await signInWithEmail(email, password)
     error.value = authError.value // Propagate error from composable
@@ -70,6 +101,11 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const register = async (email: string, password: string) => {
+    if (!stackClient) {
+      error.value = 'Authentication service not available'
+      return
+    }
+
     error.value = null // Clear previous errors
     await signUpWithEmail(email, password)
     error.value = authError.value // Propagate error from composable
@@ -77,6 +113,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Optional: Google Sign-In action
   const signInWithGoogleAction = async () => {
+    if (!stackClient) {
+      error.value = 'Authentication service not available'
+      return
+    }
+
     error.value = null // Clear previous errors
     await signInWithGoogle()
     error.value = authError.value // Propagate error from composable
