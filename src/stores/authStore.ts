@@ -30,7 +30,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     stackClient = new StackClientApp({
       projectId,
-      publishableClientKey,
+      publishableClientKey: publishableKey,
       tokenStore: "cookie"
     })
   } catch (err) {
