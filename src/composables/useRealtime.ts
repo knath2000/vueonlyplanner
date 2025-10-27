@@ -1,6 +1,6 @@
 import { ref, readonly } from 'vue'
 import { io, Socket } from 'socket.io-client'
-import { db } from '@/supabase'
+import { supabase } from '@/supabase'
 import { useAuthStore } from '@/stores/authStore'
 
 export interface RealtimeEvent {
@@ -70,10 +70,10 @@ const useRealtime = () => {
 
     const poll = async () => {
       try {
-        const { data, error } = await db
+        const { data, error } = await supabase
           .from('projects')
           .select('*')
-          .eq('user_id', authStore.currentUser.id)
+          .eq('user_id', authStore.currentUser!.id)
           .order('created_at', { ascending: false })
 
         if (!error && data) {
@@ -99,11 +99,11 @@ const useRealtime = () => {
 
     const poll = async () => {
       try {
-        const { data, error } = await db
+        const { data, error } = await supabase
           .from('tasks')
           .select('*')
           .eq('project_id', projectId)
-          .eq('user_id', authStore.currentUser.id)
+          .eq('user_id', authStore.currentUser!.id)
           .order('created_at', { ascending: true })
 
         if (!error && data) {
