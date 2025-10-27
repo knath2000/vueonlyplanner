@@ -1,136 +1,178 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { StackClientApp } from '@stackframe/stack' // Import Stack SDK for Neon Auth
-import useAuth from '@/composables/useAuth' // Import the auth composable
-import { useProjectStore } from './projectStore' // Import projectStore
+import { ref, computed } from 'vue'
+import { StackClientApp } from '@stackframe/stack'
 
-let resolveAuthLoaded: (value?: unknown) => void
-const authLoadedPromise = new Promise((resolve) => {
-  resolveAuthLoaded = resolve
+// Initialize Stack client for Neon Auth
+const stackClient = new StackClientApp({
+  projectId: import.meta.env.VITE_STACK_PROJECT_ID,
+  publishableClientKey: import.meta.env.VITE_STACK_PUBLISHABLE_CLIENT_KEY,
+  tokenStore: "cookie" // for Vue.js apps
 })
 
 export const useAuthStore = defineStore('auth', () => {
-  const currentUser = ref<any | null>(null) // Neon Auth user type
-  const loading = ref<boolean>(true) // Initially loading while checking auth state
+  // State
+  const currentUser = ref<any | null>(null)
+  const loading = ref(true) // Start with loading true
   const error = ref<string | null>(null)
+  const authLoadedPromise = ref<Promise<void>>()
 
-  // Initialize Stack client for Neon Auth with error handling
-  let stackClient: StackClientApp | null = null
+  // Initialize auth state
+  const initAuth = async () => {
+    if (authLoadedPromise.value) return authLoadedPromise.value
 
-  try {
-    const projectId = import.meta.env.VITE_STACK_PROJECT_ID
-    const publishableKey = import.meta.env.VITE_STACK_PUBLISHABLE_CLIENT_KEY
+    authLoadedPromise.value = new Promise(async (resolve) => {
+      try {
+        loading.value = true
+        error.value = null
 
-    if (!projectId || !publishableKey) {
-      console.error('Neon Auth: Missing required environment variables')
-      console.error('VITE_STACK_PROJECT_ID:', projectId ? '✓ Set' : '✗ Missing')
-      console.error('VITE_STACK_PUBLISHABLE_CLIENT_KEY:', publishableKey ? '✓ Set' : '✗ Missing')
-      throw new Error('Neon Auth environment variables not configured')
-    }
+        // Get current user from Stack
+        const user = await stackClient.getUser()
+        currentUser.value = user
 
-    stackClient = new StackClientApp({
-      projectId,
-      publishableClientKey: publishableKey,
-      tokenStore: "cookie"
-    })
-  } catch (err) {
-    console.error('Failed to initialize Neon Auth client:', err)
-    error.value = 'Authentication service not configured'
-    loading.value = false
-    resolveAuthLoaded()
-  }
-
-  const {
-    signUpWithEmail,
-    signInWithEmail,
-    signInWithGoogle,
-    signOutUser,
-    error: authError,
-  } = useAuth() // Use the auth composable
-
-  // Initialize auth state on store creation
-  const initializeAuth = async () => {
-    if (!stackClient) {
-      console.error('Cannot initialize auth: Stack client not available')
-      return
-    }
-
-    try {
-      const user = await stackClient.getUser({ or: "return-null" })
-      currentUser.value = user
-      loading.value = false
-      resolveAuthLoaded()
-
-      // If user exists, trigger initial data fetch
-      if (user) {
-        console.log('Auth state initialized: User found, triggering initial data fetch.')
-        const projectStore = useProjectStore()
-        projectStore.subscribeToProjects()
-      } else {
-        console.log('Auth state initialized: No user found.')
+        console.log('Auth initialized:', user ? 'User found' : 'No user')
+      } catch (err: any) {
+        console.error('Auth initialization error:', err)
+        error.value = err.message || 'Failed to initialize authentication'
+        currentUser.value = null
+      } finally {
+        loading.value = false
+        resolve()
       }
-    } catch (err) {
-      console.error('Error initializing auth:', err)
-      loading.value = false
-      resolveAuthLoaded()
-    }
+    })
+
+    return authLoadedPromise.value
   }
 
-  // Call initialize only if stackClient is available
-  if (stackClient) {
-    initializeAuth()
-  }
-
-  // Actions for login, logout, etc.
+  // Login action
   const login = async (email: string, password: string) => {
     if (!stackClient) {
       error.value = 'Authentication service not available'
-      return
+      return false
     }
 
-    error.value = null // Clear previous errors
-    await signInWithEmail(email, password)
-    error.value = authError.value // Propagate error from composable
+    loading.value = true
+    error.value = null
+
+    try {
+      const result = await stackClient.signInWithCredential({
+        email,
+        password,
+        noRedirect: true
+      })
+
+      if (result.status === 'error') {
+        error.value = result.error.message
+        return false
+      } else {
+        currentUser.value = await stackClient.getUser()
+        return true
+      }
+    } catch (err: any) {
+      console.error('Login error:', err)
+      error.value = err.message || 'Login failed'
+      return false
+    } finally {
+      loading.value = false
+    }
   }
 
-  const logout = async () => {
-    error.value = null // Clear previous errors
-    await signOutUser()
-    currentUser.value = null // Clear user immediately
-    error.value = authError.value // Propagate error from composable
-  }
-
+  // Register action
   const register = async (email: string, password: string) => {
     if (!stackClient) {
       error.value = 'Authentication service not available'
-      return
+      return false
     }
 
-    error.value = null // Clear previous errors
-    await signUpWithEmail(email, password)
-    error.value = authError.value // Propagate error from composable
+    loading.value = true
+    error.value = null
+
+    try {
+      const result = await stackClient.signUpWithCredential({
+        email,
+        password,
+        noRedirect: true
+      })
+
+      if (result.status === 'error') {
+        error.value = result.error.message
+        return false
+      } else {
+        currentUser.value = await stackClient.getUser()
+        return true
+      }
+    } catch (err: any) {
+      console.error('Registration error:', err)
+      error.value = err.message || 'Registration failed'
+      return false
+    } finally {
+      loading.value = false
+    }
   }
 
-  // Optional: Google Sign-In action
-  const signInWithGoogleAction = async () => {
+  // Login with Google
+  const loginWithGoogle = async () => {
+    if (!stackClient) {
+      error.value = 'Authentication service not available'
+      return false
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      await stackClient.signInWithOAuth('google')
+      // OAuth redirects, user state will be updated on callback
+      return true
+    } catch (err: any) {
+      console.error('Google login error:', err)
+      error.value = err.message || 'Google login failed'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Logout action
+  const logout = async () => {
     if (!stackClient) {
       error.value = 'Authentication service not available'
       return
     }
 
     error.value = null // Clear previous errors
-    await signInWithGoogle()
-    error.value = authError.value // Propagate error from composable
+    try {
+      const user = await stackClient.getUser()
+      if (user) {
+        await user.signOut()
+      }
+      currentUser.value = null // Clear user immediately
+    } catch (err: any) {
+      console.error('Logout error:', err)
+      error.value = err.message || 'Logout failed'
+    }
   }
 
+  // Initialize auth on store creation
+  initAuth()
+
+  // Computed
+  const isAuthenticated = computed(() => currentUser.value !== null)
+
   return {
+    // State
     currentUser,
     loading,
     error,
+    authLoadedPromise,
+
+    // Actions
+    initAuth,
     login,
-    logout,
     register,
-    signInWithGoogleAction, // Export Google Sign-In action
-    authLoadedPromise, // Export the promise
+    loginWithGoogle,
+    logout,
+
+    // Computed
+    isAuthenticated,
   }
 })

@@ -12,7 +12,7 @@
 - **Componentization & Composables:** Reusable components (`ProjectCard`, `TaskCard`, `BaseModal`, `AuthModal`, `ProjectDetailHeader`, `TaskList`, `AddProjectModal`, `EditTaskModal`, `StatCard`) created. `ProjectDetailModal` and `DashboardView` decomposed. Reusable form logic extracted into composables (`useTaskForm`, `useProjectForm`).
 - **Styling:** Theme updated to use a static dark pink/purple gradient background with an animated CSS "searchlight" effect. CSS variables adjusted for contrast. Styles applied across components.
 - **Animations:** List add/remove animations (`<TransitionGroup>`) and feedback animations (GSAP for add project/task, status change) implemented. Microinteractions (hover, click, focus) added. **Modal background blur effect implemented and fixed to persist while open.** CSS animation added for background searchlight. **Modal exit animation is smooth.** **Simple fade-in animation re-introduced for modal entrance using GSAP in the `@enter` hook.** **Implemented `prefers-reduced-motion` checks for page transitions and modal animations.** **Resolved occasional modal entrance flicker by setting initial mask opacity via CSS.**
-- **Authentication:** Supabase Authentication (Email/Password, Google OAuth) is implemented. Users can sign up, log in, and log out. Auth state is managed by the auth store. **AuthModal layout adjusted and close button conditionally hidden.** **Authentication flow is reliable.**
+- **Authentication:** **Neon Auth (Beta) successfully migrated from Supabase Auth.** Users can sign up, log in, and log out. Auth state is managed by the auth store. **AuthModal layout adjusted and close button conditionally hidden.** **Authentication flow is reliable.** **Migration completed with automatic user synchronization to `neon_auth.users_sync` table.**
 - **Database Schema & Security:** Supabase database schema for `projects` and `tasks` is defined, Realtime is enabled, and Row Level Security (RLS) policies are implemented to secure user data.
 - **Dashboard:** Basic statistics (Total Projects, Tasks To Do count) implemented. **Data loads automatically after login, and counters remain accurate across navigation and page refreshes.**
 - **Project Detail Modal Layout:** **Resolved Project Detail Modal height and bottom gap issues, ensuring it extends correctly to the bottom of the viewport with a slight gap above the menu button.**
@@ -34,16 +34,16 @@
   - Performance Testing (Lighthouse on preview build). (Medium Priority)
 - **Testing:** Begin comprehensive functional testing (unit, integration, E2E, cross-browser - Safari focus). (Medium Priority)
 - **Advanced Animations & UX:**
-  - Drag-and-drop interface for task status changes.
-  - Further integration of GSAP / @vueuse/motion for more sophisticated animations (e.g., physics-based effects).
+  - Drag-and-drop interface for task status changes. (Medium Priority)
+  - Further integration of GSAP / @vueuse/motion for more sophisticated animations (e.g., physics-based effects). (Low Priority)
 - **UI/UX Polish:**
   - Continued refinement of the "game-like" aesthetic across remaining components.
   - Implementing unique layout ideas.
   - Ensuring responsiveness and accessibility.
 - **Dashboard:** Add more meaningful statistics (e.g., task counts by status).
 - **Task Details Modal (Deferred):** Feature implementation deferred due to rendering issues. `TaskDetailsModal.vue` file exists but is unused.
+- **Real-time Alternative:** Since Neon Auth doesn't include real-time features, implement alternative solution (WebSocket polling, Server-Sent Events, or third-party service like Pusher/Ably). (High Priority)
 - **Deployment:** CI/CD pipeline setup (Vercel/Netlify).
-- **Documentation:** Code comments, component/store documentation (beyond Memory Bank).
 
 ## Current Status
 
@@ -65,7 +65,8 @@
 - **Implemented prefers-reduced-motion checks for page transitions and modal animations.**
 - **Add/Edit Modal Footers:** Corrected `BaseModal` footer slot logic. Removed "Cancel" buttons from `AddProjectModal`, `EditProjectModal`, `AddTaskModal`, and `EditTaskModal`, leaving only the confirmation button.
 - **Nested Add/Edit Task Modals are now functional.**
-- Focus shifts to **Testing & Polish**.
+- **Neon Auth Migration Completed:** Successfully migrated from Supabase Auth to Neon Auth (Beta) with automatic user synchronization.
+- Focus shifts to **Real-time Alternative Implementation** and **Testing & Polish**.
 
 ## Known Issues
 
@@ -74,3 +75,4 @@
 - Performance testing on the optimized build is pending.
 - The removal of anonymous authentication means users must explicitly sign up or log in.
 - **Task Details Modal feature is deferred.**
+- **Real-time features lost during Neon Auth migration - need alternative implementation.**

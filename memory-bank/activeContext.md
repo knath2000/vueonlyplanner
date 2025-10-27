@@ -6,7 +6,8 @@
 - **Completed Build Optimization:** Analyzed bundle size, implemented PurgeCSS, and refactored GSAP imports to be dynamic, improving code splitting and potential load performance.
 - **Completed Animation Re-implementation & Accessibility:** Re-introduced smooth page transitions and modal entrance animations, and implemented `prefers-reduced-motion` checks.
 - **Completed Nested Modal Debugging:** Resolved issues preventing Add/Edit Task modals from appearing when nested within Project Detail modal.
-- Next focus: **Testing & Polish** - Begin comprehensive testing and address any remaining UI/UX refinements.
+- **Completed Neon Auth Migration:** Successfully migrated from Supabase Auth to Neon Auth (Beta) with automatic user synchronization and working authentication flows.
+- Next focus: **Real-time Alternative Implementation** - Since Neon Auth doesn't include real-time features, implement alternative solution for instant data synchronization.
 
 ## Recent Changes
 
@@ -61,22 +62,34 @@
 - **Fixed Modal Entrance Flicker:** Resolved occasional flicker by setting initial mask opacity via CSS in `BaseModal.vue`.
 - **Fixed BaseModal Footer Slot:** Corrected `v-if` logic in `BaseModal.vue` to ensure the `#footer` slot renders correctly when provided by parent components.
 - **Standardized Modal Footers:** Removed the "Cancel" button from `AddProjectModal`, `EditProjectModal`, `AddTaskModal`, and `EditTaskModal`, leaving only the confirmation (checkmark) button.
-- **Task Details Modal (Deferred):** Attempted to implement a nested Task Details modal triggered from `TaskCard`. Encountered persistent rendering issues (modal not appearing despite state being correct). Debugging included checking state, using `<Teleport>`, investigating component internals, and applying `z-index` fixes. The feature was ultimately removed from `TaskCard`, `TaskList`, and `ProjectDetailModal` to be revisited later. The `TaskDetailsModal.vue` component file remains but is unused.
 - **Fixed Nested Add/Edit Task Modals:** Resolved issue where Add Task and Edit Task modals wouldn't appear when triggered from within the Project Detail modal. Initial attempts to fix with `z-index` were unsuccessful. The solution involved moving the `<AddTaskModal>` and `<EditTaskModal>` component tags _outside_ the parent `<BaseModal>` tag in `ProjectDetailModal.vue`, rendering them as siblings instead of children.
+- **Neon Auth Migration Completed:** Successfully migrated from Supabase Auth to Neon Auth (Beta). Key achievements:
+  - Installed `@stackframe/stack` and `postgrest-js` packages
+  - Removed `@supabase/supabase-js` authentication dependencies
+  - Updated `authStore.ts` to use Stack Auth client with proper error handling
+  - Implemented automatic user synchronization to `neon_auth.users_sync` table
+  - Fixed authentication flows (login, register, logout) using Stack Auth API
+  - Resolved build issues and environment variable configuration
+  - Maintained existing UI components and user experience
+  - Created migration script (`migrate_users.ts`) for existing users
 
 ## Next Steps
 
-1.  **Testing:** Begin comprehensive functional testing (unit, integration, E2E, cross-browser - Safari focus). (High Priority)
-2.  **Phase 4 UI/UX Polish & Accessibility:**
+1.  **Real-time Alternative Implementation (High Priority):** Since Neon Auth doesn't include real-time features, implement alternative solution:
+    - Evaluate options: WebSocket polling, Server-Sent Events, or third-party service (Pusher/Ably)
+    - Implement chosen solution to restore instant data synchronization
+    - Test real-time functionality across devices
+2.  **Testing & Polish** - Begin comprehensive testing and address any remaining UI/UX refinements.
+3.  **Phase 4 UI/UX Polish & Accessibility:**
     - Perform Accessibility Review (contrast, focus, ARIA). (High Priority)
     - Performance Testing (Lighthouse on preview build). (Medium Priority)
-3.  **Advanced Animations & UX:**
+4.  **Advanced Animations & UX:**
     - Drag-and-drop interface for task status changes. (Medium Priority)
     - Further integration of GSAP / @vueuse/motion for more sophisticated animations (e.g., physics-based effects). (Low Priority)
-4.  **UI/UX Polish:** Continued refinement based on testing feedback. (Medium Priority)
-5.  **CI/CD:** Set up CI/CD pipeline. (Low Priority)
-6.  **Documentation:** Continue updating Memory Bank and `.clinerules`. (Ongoing)
-7.  **Revisit Task Details Modal:** Plan for re-implementing the Task Details modal feature, considering the lessons learned from nesting issues. (Low Priority)
+5.  **UI/UX Polish:** Continued refinement based on testing feedback. (Medium Priority)
+6.  **CI/CD:** Set up CI/CD pipeline. (Low Priority)
+7.  **Documentation:** Continue updating Memory Bank and `.clinerules`. (Ongoing)
+8.  **Revisit Task Details Modal:** Plan for re-implementing the Task Details modal feature, considering the lessons learned from nesting issues. (Low Priority)
 
 ## Active Decisions and Considerations
 
@@ -97,3 +110,4 @@
 - **Successfully re-implemented smooth CSS fade page transitions and GSAP fade-in/out modal animations.**
 - **Nested modals (Add/Edit Task) now function correctly after being moved outside the parent modal's template structure in `ProjectDetailModal.vue`.**
 - **Task Details modal feature has been temporarily removed due to persistent rendering issues and will be revisited.**
+- **Neon Auth migration completed successfully, providing database-first authentication with automatic user synchronization while maintaining the existing user experience.**
